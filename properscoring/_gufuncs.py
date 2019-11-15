@@ -132,7 +132,7 @@ def _mean_crps_rel_pot(observations, forecasts, mean_crps, reliability, crps_pot
                     beta_k += 0
                 elif (e[k-1] < x) and (x <= e[k]):
                     print('case 2')
-                    alpha_k += x - e[k]
+                    alpha_k += x - e[k-1]
                     beta_k += e[k] - x
                 elif x <= e[k-1]:
                     print('case 3')

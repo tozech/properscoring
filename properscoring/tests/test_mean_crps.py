@@ -11,15 +11,15 @@ import numpy as np
 from numba import guvectorize
 
 from properscoring._gufuncs import _uncertainty_comp, _mean_crps_rel_pot
-from properscoring import crps_ensemble
-
-
 from properscoring._mean_crps import _mean_crps_hersbach
+#from properscoring import crps_ensemble
+
 #
 class TestsEnsembleComponents(unittest.TestCase):
     def setUp(self):
-        self.obs = np.random.randn(10)
-        self.forecasts = np.random.randn(10, 5)
+        np.random.seed(42)
+        self.obs = np.random.randn(20)
+        self.forecasts = np.random.randn(20, 5)
 
 #    def test_crps_rel_res_unc(self):
 #        res = _mean_crps_hersbach(self.obs, self.forecasts)
@@ -37,21 +37,27 @@ class TestsEnsembleComponents(unittest.TestCase):
 
     def test_mean_crps_rel_pot_basic(self):
         obs = np.array([2, -2, 13])
-        fc = np.array([[0, 1, 3, 5], [-1, 0, 6, 7], [9, 10, 11, 2]])
+        fc = np.array([[0, 1, 3, 5], [-1, 0, 6, 7], [2, 9, 10, 11]])
         m, r, p = _mean_crps_rel_pot(obs, fc)
-        self.assertAlmostEqual(m, 3.1875)
-        self.assertAlmostEqual(r, 1.4652777777777777)
-        self.assertAlmostEqual(p, 1.7222222222222223)
+        self.assertAlmostEqual(m, 2.3541666666666665)# Equals crps_ensemble(obs, fc).mean()
+        self.assertAlmostEqual(r, 1.2893518518518519)
+        self.assertAlmostEqual(p, 1.0648148148148149)
 
+    def test_mean_crps(self):
+        m, rel, res, unc = _mean_crps_hersbach(self.obs, self.forecasts)
+#        self.assertAlmostEqual(m, rel - res + unc)
+        self.assertAlmostEqual(m, 0.6140103173775591)# Equals crps_ensemble(obs, fc).mean()
+        self.assertAlmostEqual(rel, 0.23936183131677677)
+        self.assertAlmostEqual(res, 0.15370836411500766)
+        self.assertAlmostEqual(unc, 0.5283568501757899)
 
 
 
 if __name__ == '__main__':
-#    unittest.main()
+    unittest.main()
     #%%
-    obs = np.array([2, -2, 13])
-    fc = np.array([[0, 1, 3, 5], [-1, 0, 6, 7], [9, 10, 11, 2]])
-    m, r, p = _mean_crps_rel_pot(obs, fc)
-    #%%
-    crps_ensemble(obs, fc).mean()
+#    obs = np.array([2, -2, 13])
+#    fc = np.array([[0, 1, 3, 5], [-1, 0, 6, 7], [2, 9, 10, 11]])
+#    m, r, p = _mean_crps_rel_pot(obs, fc)
+
 
