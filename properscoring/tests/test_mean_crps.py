@@ -11,7 +11,7 @@ import numpy as np
 from numba import guvectorize
 
 from properscoring._gufuncs import _uncertainty_comp, _mean_crps_rel_pot
-
+from properscoring import crps_ensemble
 
 
 from properscoring._mean_crps import _mean_crps_hersbach
@@ -36,18 +36,22 @@ class TestsEnsembleComponents(unittest.TestCase):
         self.assertTrue(np.isnan(act))
 
     def test_mean_crps_rel_pot_basic(self):
-        obs = np.array([2, -2, 101])
-        fc = np.array([[0, 1, 3, 5], [-1, 0, 6, 7], [9, 10, 11, 100]])
+        obs = np.array([2, -2, 13])
+        fc = np.array([[0, 1, 3, 5], [-1, 0, 6, 7], [9, 10, 11, 2]])
         m, r, p = _mean_crps_rel_pot(obs, fc)
-        self.assertAlmostEqual(m, 54.6875)
-        self.assertAlmostEqual(r, 50.11865942028985)
-        self.assertAlmostEqual(p, 4.568840579710145)
+        self.assertAlmostEqual(m, 3.1875)
+        self.assertAlmostEqual(r, 1.4652777777777777)
+        self.assertAlmostEqual(p, 1.7222222222222223)
 
 
 
 
 if __name__ == '__main__':
-    unittest.main()
-#    obs = np.array([2, -2, 101])
-#    fc = np.array([[0, 1, 3, 5], [-1, 0, 6, 7], [9, 10, 11, 100]])
-#    m, r, p = _mean_crps_rel_pot(obs, fc)
+#    unittest.main()
+    #%%
+    obs = np.array([2, -2, 13])
+    fc = np.array([[0, 1, 3, 5], [-1, 0, 6, 7], [9, 10, 11, 2]])
+    m, r, p = _mean_crps_rel_pot(obs, fc)
+    #%%
+    crps_ensemble(obs, fc).mean()
+
