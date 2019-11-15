@@ -96,3 +96,13 @@ def _threshold_brier_score_gufunc(observation, forecasts, thresholds, result):
         binary_obs = obs <= threshold
         # probability is always 1, so we can skip the square
         result[k] = 1 - binary_obs
+
+@guvectorize(["void(float64[:], float64[:])"], "(n)->()", nopython=True)
+def _uncertainty_comp(observations, result):
+    unc = 0.
+    N = observations.shape[0]
+    for i in range(N):
+        for j in range(i):
+            unc += np.abs(observations[i] - observations[j])
+
+    result[0] = unc / N**2
