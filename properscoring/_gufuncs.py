@@ -106,3 +106,51 @@ def _uncertainty_comp(observations, result):
             unc += np.abs(observations[i] - observations[j])
 
     result[0] = unc / N**2
+
+@guvectorize(["void(float64[:], float64[:,:], float64[:], float64[:], float64[:])"],
+             "(n),(n,m)->(),(),()", nopython=True)
+def _mean_crps_rel_pot(observations, forecasts, mean_crps, reliability, crps_pot):
+    mea = 0 #mean CRPS over all observations i
+    rel = 0 #mean realibility component
+    pot = 0 #CRPS_pot component for computation of resolution component
+
+    M = forecasts.shape[1]
+    N = forecasts.shape[0]
+    for k in range(M+1):
+        p_k = k / M
+        print(p_k)
+        alpha_k = 0
+        beta_k = 0
+        for i in range(N):
+            e = forecasts[i, :]
+            x = observations[i]
+            if (k > 0) and (k < M):
+                if x > e[k]:
+                    alpha_k += e[k] - e[k-1]
+                    beta_k += 0
+                elif (e[k] >= x) and (x > e[k-1]):
+                    alpha_k += x - e[k]
+                    beta_k += e[k] - x
+                elif e[k-1] >= x:
+                    alpha_k += 0
+                    beta_k += e[k] - e[k-1]
+            elif (k == 0) or (k == M):
+                if x < e[0]:
+                    alpha_k += 0
+                    beta_k += e[0] - x
+                if x > e[M-1]:
+                    alpha_k += x - e[M-1]
+                    beta_k += 0
+
+#        print('k', k, 'Alpha', alpha_k, 'Beta', beta_k)
+        mea += alpha_k * p_k**2 + beta_k * (1 - p_k)**2
+
+        g_k = alpha_k + beta_k
+        o_k = beta_k / g_k
+
+        rel += g_k * (o_k - p_k)**2
+        pot += g_k * o_k * (1 - o_k)
+
+    mean_crps[0] = mea
+    reliability[0] = rel
+    crps_pot[0] = pot
