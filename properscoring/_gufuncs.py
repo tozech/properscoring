@@ -155,10 +155,11 @@ def _mean_crps_rel_pot(observations, forecasts, mean_crps, reliability, crps_pot
         mea += alpha_k * p_k**2 + beta_k * (1 - p_k)**2
 
         g_k = alpha_k + beta_k
-        o_k = beta_k / g_k
+        if g_k > 0:
+            o_k = beta_k / g_k
 
-        rel += g_k * (o_k - p_k)**2
-        pot += g_k * o_k * (1 - o_k)
+            rel += g_k * (o_k - p_k)**2
+            pot += g_k * o_k * (1 - o_k)
 
     mean_crps[0] = mea
     reliability[0] = rel

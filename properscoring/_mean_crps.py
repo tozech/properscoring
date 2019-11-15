@@ -16,7 +16,7 @@ from properscoring._gufuncs import _uncertainty_comp, _mean_crps_rel_pot
 ##
 ##    obs=obs[mask]
 ##    ensemble=ensemble[:,mask]
-#    
+#
 #    combined=np.vstack((obs[np.newaxis],ensemble))
 #
 #    # print('computing ranks')
@@ -36,14 +36,16 @@ from properscoring._gufuncs import _uncertainty_comp, _mean_crps_rel_pot
 
 def _mean_crps_hersbach(observations, forecasts):
     """mean CRPS with reliability, resolution and uncertainty
-    
+
     following the method of Hersbach 2000
-    
+
     Parameters
     ----------
     observations : numpy.array
+        1d-array of the observations
     forecasts : numpy.array
-    
+        2d-array of the ensemble forecasts with the members in the last dimension
+
     Returns
     -------
     4-tuple of floats
@@ -56,11 +58,37 @@ def _mean_crps_hersbach(observations, forecasts):
     del forecasts
     return mean_crps, reliability, resolution, uncertainty
 
+def mean_crps(observations, forecasts, method='hersbach'):
+    """mean CRPS with reliability, resolution and uncertainty
+
+    Parameters
+    ----------
+    observations : numpy.array
+        1d-array of the observations
+    forecasts : numpy.array
+        2d-array of the ensemble forecasts with the members in the last dimension
+    method : str (default: 'hersbach')
+
+    Returns
+    -------
+    4-tuple of floats
+        mean CRPS, reliability, resolution and uncertainty component of CRPS
+
+    References
+    ----------
+    Hans Hersbach, Decomposition of the Continuous Ranked Probability Score
+    for Ensemble Prediction Systems, 2000
+    """
+    if method == 'hersbach':
+        return _mean_crps_hersbach(observations, forecasts)
+    else:
+        raise NotImplementedError(f'method {method} is not implemented.')
+
 if __name__ == '__main__':
     #%%
     np.random.seed(42)
-    obs = np.random.randn(20)
-    fc = np.random.randn(20, 5)
+    obs = np.random.randn(10)
+    fc = np.random.randn(10, 5)
     m, rel, res, unc = _mean_crps_hersbach(obs, fc)
     from properscoring import crps_ensemble
     crps_values = crps_ensemble(obs, fc)
@@ -77,13 +105,13 @@ if __name__ == '__main__':
 #    is_rank = rank_vals == ind
 #    above_rank = rank_vals < ind
 #    below_rank = rank_vals > ind
-#    #%%    
+#    #%%
 #    alpha = np.where(below_rank, delta_ens, 0)
 #    alpha = np.where(is_rank, delta_obs, alpha)
-#    
+#
 #    beta = np.where(above_rank, delta_ens, 0)
 #    beta = np.where(is_rank, -delta_obs, beta)
-#    
+#
 #    p = possible_ranks / len(possible_ranks)
 #    alpha_bar = np.mean(alpha, 0)
 #    beta_bar = np.mean(beta, 0)
@@ -93,4 +121,3 @@ if __name__ == '__main__':
 #    unc = _uncertainty_comp(obs)
 #    crps_pot = np.sum(g_bar * o_bar * (1 - o_bar))
 #    res = unc - crps_pot
-    
