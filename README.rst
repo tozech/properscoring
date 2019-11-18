@@ -115,6 +115,9 @@ categories:
   - for binary probability forecasts: ``brier_score``
   - for threshold exceedances with an ensemble forecast: ``threshold_brier_score``
 
+* Mean CRPS with decomposition into reliability, resolution, uncertainty:
+  - for an ensemble via the Hersbach method: ``mean_crps``
+
 All functions are robust to missing values represented by the floating
 point value ``NaN``.
 

@@ -124,34 +124,28 @@ def _mean_crps_rel_pot(observations, forecasts, mean_crps, reliability, crps_pot
         for i in range(N):
             e = forecasts[i, :]
             x = observations[i]
-            print('i', i, 'e', e, 'x', x, 'Alpha', alpha_k, 'Beta', beta_k)
+            #print('i', i, 'e', e, 'x', x, 'Alpha', alpha_k, 'Beta', beta_k)
             if (k > 0) and (k < M):
                 if e[k] < x:
-                    print('case 1')
                     alpha_k += e[k] - e[k-1]
                     beta_k += 0
                 elif (e[k-1] < x) and (x <= e[k]):
-                    print('case 2')
                     alpha_k += x - e[k-1]
                     beta_k += e[k] - x
                 elif x <= e[k-1]:
-                    print('case 3')
                     alpha_k += 0
                     beta_k += e[k] - e[k-1]
             elif (k == 0):
                 if x < e[0]:
-                    print('case 4')
                     alpha_k += 0
                     beta_k += e[0] - x
             elif (k == M):
                 if e[M-1] < x:
-                    print('case 5')
                     alpha_k += x - e[M-1]
                     beta_k += 0
         alpha_k /= N
         beta_k /= N
 
-        print('k', k, 'p_k', p_k, 'Alpha', alpha_k, 'Beta', beta_k)
         mea += alpha_k * p_k**2 + beta_k * (1 - p_k)**2
 
         g_k = alpha_k + beta_k

@@ -8,7 +8,7 @@ Created on Wed Nov 13 16:37:32 2019
 import numpy as np
 from scipy.stats import rankdata
 
-from properscoring._gufuncs import _uncertainty_comp, _mean_crps_rel_pot
+
 
 
 #def ranks(obs, ensemble):#, mask=):
@@ -33,7 +33,14 @@ from properscoring._gufuncs import _uncertainty_comp, _mean_crps_rel_pot
 #        ranks[ties==tie[i]]=[np.random.randint(index[j],index[j]+tie[i]+1,tie[i])[0] for j in range(len(index))]
 #    return ranks
 
+try:
+    from properscoring._gufuncs import _uncertainty_comp, _mean_crps_rel_pot
+except ImportError as exc:
+    def _make_import_error(a):
+        raise ImportError('Numba is not installed.')
+    _uncertainty_comp = lambda x: _make_import_error(x)
 
+    
 def _mean_crps_hersbach(observations, forecasts):
     """mean CRPS with reliability, resolution and uncertainty
 
