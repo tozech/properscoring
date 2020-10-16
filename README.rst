@@ -1,9 +1,6 @@
 properscoring
 =============
 
-.. image:: https://travis-ci.org/TheClimateCorporation/properscoring.svg?branch=master
-    :target: https://travis-ci.org/TheClimateCorporation/properscoring
-
 .. highlight:: python
 
 `Proper scoring rules`_ for evaluating probabilistic forecasts in Python.
