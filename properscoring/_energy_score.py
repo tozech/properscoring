@@ -7,6 +7,8 @@ Created on Thu Oct 15 21:16:18 2020
 """
 import numpy as np
 
+from ._utils import suppress_warnings
+
 try:
     from properscoring._gufuncs import _energy_score_gufunc
 except ImportError as exc:
@@ -14,25 +16,9 @@ except ImportError as exc:
         raise ImportError('Numba is not installed.')
     _energy_score_gufunc = lambda x: _make_import_error(x)
 
-def L2_norm(arr, axis=-1):
-    """L2 or euclidean norm
-    
-    Parameters
-    ----------
-    arr : np.ndarray
-    axis : int
-        axis to aggregate with norm
-        
-    Returns
-    -------
-    
-    """
-    squared = arr ** 2
-    mean_val = np.nanmean(squared, axis=axis)
-    root_mean = np.sqrt(mean_val)
-    return root_mean
+# TODO: refactor energy_score to energy_score_vectorized and add numba version
 
-def energy_score(observations, forecasts, weights=None, issorted=False, 
+def energy_score(observations, forecasts, weights=None, issorted=False,
                  axis=-2, feature_axis=-1):
     """computes the energy score
 
@@ -42,6 +28,8 @@ def energy_score(observations, forecasts, weights=None, issorted=False,
         2-dim (samples, features)
     forecasts : np.ndarray
         3-dim (samples, members, features)
+    weights : np.ndarray
+        1-dim (samples, members)
 
     Returns
     -------
@@ -49,44 +37,46 @@ def energy_score(observations, forecasts, weights=None, issorted=False,
         1-dim (samples) energy score
 
     """
+    if issorted:
+        raise NotImplementedError
     if axis != -2:
         raise NotImplementedError
-#    obs = observations[:, np.newaxis]
-#    resi = forecasts - obs
-#    
-#    fc_extra = forecasts[:, None]
-    
+    if feature_axis != -1:
+        raise NotImplementedError
+
     observations = np.asarray(observations)
     forecasts = np.asarray(forecasts)
-#    weights = np.asarray(weights)
-#    if weights.ndim > 0:
-#        weights = np.where(~np.isnan(forecasts), weights, np.nan)
-#        weights = weights / np.nanmean(weights, axis=-1, keepdims=True)
+    weights = np.asarray(weights)
+    if weights.ndim > 0:
+        forecasts_nan = np.all(~np.isnan(forecasts), axis=-1)
+        weights = np.where(forecasts_nan, weights, np.nan)
+        #Uses mean for NaN handling, requires mean in score = np.nanmean(... later on
+        weights = weights / np.nanmean(weights, axis=-1, keepdims=True)
+    else:
+        weights = np.ones(forecasts.shape[:-1])
+        weights = weights / np.nanmean(weights, axis=-1, keepdims=True)
 
     if observations.ndim == forecasts.ndim - 1:
         # sum over the last axis
 #        assert observations.shape == forecasts.shape[:-1] #TODO redo
         observations = np.expand_dims(observations, axis=-2)
-#        with suppress_warnings('Mean of empty slice'):
-#            score = np.nanmean(weights * abs(forecasts - observations), -1)
         l2norm_resi = np.linalg.norm(forecasts - observations, axis=feature_axis)
-        score = np.nanmean(l2norm_resi, axis=-1)
+        with suppress_warnings('Mean of empty slice'):
+            score = np.nanmean(weights * l2norm_resi, axis=-1)
         # insert new axes along last and second to last forecast dimensions so
         # forecasts_diff expands with the array broadcasting
         forecasts_diff = (np.expand_dims(forecasts, -2) -
                           np.expand_dims(forecasts, -3))
-#        weights_matrix = (np.expand_dims(weights, -1) *
-#                          np.expand_dims(weights, -2))
-#        with suppress_warnings('Mean of empty slice'):
-#            score += -0.5 * np.nanmean(weights_matrix * abs(forecasts_diff),
-#                                       axis=(-2, -1))
+        weights_matrix = (np.expand_dims(weights, -1) *
+                          np.expand_dims(weights, -2))
         l2norm_diff = np.linalg.norm(forecasts_diff, axis=feature_axis)
-        score += -0.5 * np.nanmean(l2norm_diff, axis=(-2, -1))
-        
+        with suppress_warnings('Mean of empty slice'):
+            score += -0.5 * np.nanmean(weights_matrix * l2norm_diff, axis=(-2, -1))
+
         return score
     #deltas = fc_extra - fc_extra.transpose((-1, -2))
 
-    
+
 #    observations = np.asarray(observations)
 #    forecasts = np.asarray(forecasts)
 #    if axis != -1:
