@@ -28,14 +28,22 @@ def energy_score(observations, forecasts, weights=None, issorted=False,
         2-dim (samples, features)
     forecasts : np.ndarray
         3-dim (samples, members, features)
-    weights : np.ndarray
-        1-dim (samples, members)
+    weights : np.ndarray, optional
+        2-dim (samples, members)
+    issorted : bool, optional
+    axis : int, optional
+    feature_axis : int, optional
 
     Returns
     -------
     np.ndarray
         1-dim (samples) energy score
 
+    References
+    ----------
+    Tilmann Gneiting & Adrian E Raftery (2007) Strictly Proper Scoring Rules,
+    Prediction, and Estimation, Journal of the American Statistical Association,
+    102:477, 359-378, DOI: 10.1198/016214506000001437
     """
     if issorted:
         raise NotImplementedError
@@ -74,39 +82,3 @@ def energy_score(observations, forecasts, weights=None, issorted=False,
             score += -0.5 * np.nanmean(weights_matrix * l2norm_diff, axis=(-2, -1))
 
         return score
-    #deltas = fc_extra - fc_extra.transpose((-1, -2))
-
-
-#    observations = np.asarray(observations)
-#    forecasts = np.asarray(forecasts)
-#    if axis != -1:
-#        forecasts = move_axis_to_end(forecasts, axis)
-#
-#    if weights is not None:
-#        weights = move_axis_to_end(weights, axis)
-#        if weights.shape != forecasts.shape:
-#            raise ValueError('forecasts and weights must have the same shape')
-#
-#    if observations.shape not in [forecasts.shape, forecasts.shape[:-1]]:
-#        raise ValueError('observations and forecasts must have matching '
-#                         'shapes or matching shapes except along `axis=%s`'
-#                         % axis)
-#
-#    if observations.shape == forecasts.shape:
-#        if weights is not None:
-#            raise ValueError('cannot supply weights unless you also supply '
-#                             'an ensemble forecast')
-#        return abs(observations - forecasts)
-#
-#    if not issorted:
-#        if weights is None:
-#            forecasts = np.sort(forecasts, axis=-1)
-#        else:
-#            idx = argsort_indices(forecasts, axis=-1)
-#            forecasts = forecasts[idx]
-#            weights = weights[idx]
-#
-#    if weights is None:
-#        weights = np.ones_like(forecasts)
-#
-#    return _energy_score_gufunc(observations, forecasts)
